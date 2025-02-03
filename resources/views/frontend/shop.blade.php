@@ -1,4 +1,4 @@
-@extends('frontend.master')
+@extends('frontend.index')
 @section('page_content')
 <main>
             <main class="shop">
@@ -37,11 +37,27 @@
                                     
                                    @endforeach
                                     <div class="col-12">
+                                    @if ($products->hasPages())
                                         <ul class="pagination">
-                                            <li>
-                                                <a href="/shop?page=1">1</a>
-                                            </li>
+                                            <!-- Previous Page -->
+                                            @if (!$products->onFirstPage())
+                                                <li><a href="{{ $products->previousPageUrl() }}" rel="prev">&laquo;</a></li>
+                                            @else
+                                                <li class="disabled"><span>&laquo;</span></li>
+                                            @endif
+
+                                            <!-- Pagination Links -->
+                                            {{ $products->links() }}
+
+                                            <!-- Next Page -->
+                                            @if ($products->hasMorePages())
+                                                <li><a href="{{ $products->nextPageUrl() }}" rel="next">&raquo;</a></li>
+                                            @else
+                                                <li class="disabled"><span>&raquo;</span></li>
+                                            @endif
                                         </ul>
+                                    @endif
+
                                     </div>
                                 </div>
                             </div>
@@ -49,26 +65,22 @@
                                 <h4 class="title">Category</h4>
                                 <ul>
                                     <li>
-                                        <a href="/shop">ALL</a>
+                                        <a href="/shop" class="{{ !$currentCategory ? 'active' : '' }}">ALL</a>
                                     </li>
-                                    <li>
-                                        <a href="/shop?cat=">Men</a>
-                                    </li> 
-                                    <li>
-                                        <a href="/shop?cat=">Women</a>
-                                    </li> 
-                                    <li>
-                                        <a href="/shop?cat=">Girl</a>
-                                    </li> 
-                                    <li>
-                                        <a href="/shop?cat=">Boy</a>
-                                    </li> 
+                                    @foreach ($categories as $category)
+                                        <li>
+                                            <a href="/shop?cat={{ str_replace(' ', '-', strtolower($category->name)) }}"
+                                                class="{{ $currentCategory == strtolower(str_replace(' ', '-', $category->name)) ? 'active' : '' }}">
+                                                {{ strtoupper($category->name) }}
+                                            </a>
+                                        </li>
+                                    @endforeach
                                 </ul>
                                 
                                 <h4 class="title mt-4">Price</h4>
                                 <div class="block-price mt-4">
-                                <a href="{{ route('shop', ['price' => 'max']) }}">High</a>
-                                <a href="{{ route('shop', ['price' => 'min']) }}">Low</a>
+                                <a href="/shop?price=max">High</a>
+                                <a href="/shop?price=min">Low</a>
                                 </div>
             
                                 <h4 class="title mt-4">Promotion</h4>

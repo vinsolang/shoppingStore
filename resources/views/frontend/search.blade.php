@@ -1,4 +1,4 @@
-@extends('frontend.master')
+@extends('frontend.index')
 @section('title')
     search page
 @endsection

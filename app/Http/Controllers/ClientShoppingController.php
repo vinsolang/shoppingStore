@@ -46,7 +46,51 @@ class ClientShoppingController extends Controller
                 $query = DB::table('product')->orderBy('sale_price', 'ASC')->get();
             }
         }
-        return view('frontend.shop',['showLogo'=>$showLogo,'shop'=>$shop,'query'=>$query]);
+        // Get the 'cat' parameter and replace hyphens with spaces
+        $categoryName = str_replace('-', ' ', $request->query('cat'));
+        $priceOrder = $request->query('price');
+        $promotion = $request->query('promotion');
+
+        // Prepare lowercase parameters
+        $lowercaseParams = [
+            'cat' => $categoryName ? strtolower($categoryName) : null,
+            'price' => $priceOrder ? strtolower($priceOrder) : null,
+            'promotion' => $promotion ? strtolower($promotion) : null,
+        ];
+
+        // Redirect to a cleaned-up URL if necessary (to ensure lowercase params)
+        if ($categoryName && $categoryName !== $lowercaseParams['cat']) {
+            return redirect()->route('shop', array_filter($lowercaseParams));
+        }
+
+        // Base query for products
+        $query = DB::table('product')
+            ->join('category', 'product.Category_id', '=', 'category.id')
+            ->select('product.*');
+
+        // Filter by category
+        if ($lowercaseParams['cat']) {
+            $query->where(DB::raw('LOWER(category.name)'), '=', $lowercaseParams['cat']);
+        }
+
+        // Sorting by price
+        if ($lowercaseParams['price'] === 'max') {
+            $query->orderBy('product.regular_price', 'DESC');
+        } elseif ($lowercaseParams['price'] === 'min') {
+            $query->orderBy('product.regular_price', 'ASC');
+        } else {
+            $query->orderBy('product.id', 'DESC');
+        }
+
+        // Filter for promotion products if 'promotion' is true
+        if ($lowercaseParams['promotion'] === 'true') {
+            $query->whereColumn('product.sale_price', '<', 'product.regular_price');
+        }
+
+        $products = $query->paginate(9);
+
+        $categories = DB::table('category')->get();
+        return view('frontend.shop',['showLogo'=>$showLogo,'shop'=>$shop,'query'=>$query,'products'=>$products,'categories'=>$categories,'currentCategory'=>$lowercaseParams['cat']]);
     }
     public function product($id){
         DB::table('product')

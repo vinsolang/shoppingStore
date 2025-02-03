@@ -1,4 +1,4 @@
-@extends('frontend.master')
+@extends('frontend.index')
 @section('page_content')
 <main class="product-detail">
 
